@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mad Libs Story Generator Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            --success-gradient: linear-gradient(45deg, #10b981 0%, #059669 100%);
+            --warning-gradient: linear-gradient(45deg, #f59e0b 0%, #d97706 100%);
+            --error-gradient: linear-gradient(45deg, #ef4444 0%, #dc2626 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --shadow-light: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-heavy: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+        }
+
+        body {
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
+            padding-bottom: 60px;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 900;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            letter-spacing: -0.02em;
+        }
+
+        .header .subtitle {
+            font-size: 1.3rem;
+            color: rgba(255,255,255,0.9);
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.2rem 2.5rem;
+            text-align: center;
+            transition: var(--transition);
+            min-width: 180px;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-heavy);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            display: block;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .stat-label {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.85);
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .story-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .story-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 2px solid transparent;
+            border-radius: 25px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .story-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .story-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .story-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .story-card.active {
+            background: rgba(255,255,255,0.15);
+            border-color: #fff;
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .story-card-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            text-align: center;
+            transition: transform 0.5s ease;
+        }
+
+        .story-card:hover .story-card-icon {
+            transform: scale(1.1);
+        }
+
+        .story-card h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-size: 1.7rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .story-card p {
+            color: rgba(255,255,255,0.85);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .story-card .difficulty {
+            display: inline-block;
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            align-self: center;
+            transition: all 0.3s ease;
+        }
+
+        .story-card:hover .difficulty {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .form-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 30px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+            backdrop-filter: blur(20px);
+            animation: slideInUp 0.6s ease-out;
+            position: relative;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-header h2 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .form-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .progress-container {
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-gradient);
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.8rem;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.2rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group .help-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: help;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .input-group .help-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 1.2rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: #fff;
+            font-family: inherit;
+            box-shadow: var(--shadow-light);
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .input-group input.error {
+            border-color: #ef4444;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .input-group input.success {
+            border-color: #10b981;
+        }
+
+        .input-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: var(--shadow-heavy);
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            margin-top: 5px;
+        }
+
+        .suggestion-item {
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .suggestion-item:hover {
+            background: #f8fafc;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item i {
+            color: #667eea;
+            font-size: 0.9rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1.2rem;
+            justify-content: center;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1.2rem 2.5rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 1.05rem;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.9);
+            color: var(--text-primary);
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .btn-accent {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .btn-accent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .story-output {
+            background: rgba(255,255,255,0.95);
+            border-radius: 30px;
+            padding: 3rem;
+            margin-top: 2rem;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+            backdrop-filter: blur(20px);
+            display: none;
+            animation: fadeIn 0.8s ease-out;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .story-header h2 {
+            font-size: 2.7rem;
+            margin-bottom: 1.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .story-meta {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            background: rgba(245,247,250,0.8);
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+        }
+
+        .story-text {
+            font-size: 1.25rem;
+            line-height: 1.8;
+            color: var(--text-primary);
+            margin-bottom: 2.5rem;
+            padding: 2.5rem;
+            background: #f8fafc;
+            border-radius: 20px;
+            border-left: 5px solid #667eea;
+            box-shadow: var(--shadow-light);
+        }
+
+        .story-text .highlight {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            position: relative;
+        }
+
+        .story-text .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-gradient);
+            opacity: 0.3;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2.5rem;
+        }
+
+        .story-analytics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .analytics-item {
+            background: #f8fafc;
+            padding: 1.8rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            transition: var(--transition);
+            box-shadow: var(--shadow-light);
+        }
+
+        .analytics-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .analytics-number {
+            font-size: 2.3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            display: block;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .analytics-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            color: var(--text-primary);
+            padding: 1.2rem 2rem;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            transform: translateX(400px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            border-left: 5px solid var(--success-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: 500;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            border-left-color: var(--error-color);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        .toast i {
+            font-size: 1.5rem;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 25px;
+            padding: 3rem;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-header h2 {
+            font-size: 2rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .tips-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .tip-item {
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 15px;
+            border-left: 5px solid var(--primary-gradient);
+            display: flex;
+            gap: 1.2rem;
+            align-items: flex-start;
+            transition: var(--transition);
+        }
+
+        .tip-item:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .tip-item i {
+            font-size: 1.8rem;
+            color: #667eea;
+            min-width: 40px;
+        }
+
+        .tip-content h3 {
+            margin-bottom: 0.7rem;
+            color: var(--text-primary);
+        }
+
+        .tip-content p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .voice-controls {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            margin-top: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .voice-control {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: #f8fafc;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+        }
+
+        .voice-control input[type="range"] {
+            width: 100px;
+        }
+
+        .word-count-indicator {
+            position: absolute;
+            top: -8px;
+            right: 12px;
+            background: var(--accent-gradient);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .auto-save-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-weight: 500;
+        }
+
+        .auto-save-indicator.show {
+            opacity: 1;
+        }
+
+        .feature-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--accent-gradient);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .export-options {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.8rem 1.5rem;
+            background: #f8fafc;
+            border-radius: 10px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            border: 1px solid #e5e7eb;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-light);
+            background: white;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .ai-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(79, 172, 254, 0.2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            margin-left: 10px;
+            font-size: 0.8rem;
+            color: white;
+        }
+
+        .achievements-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .achievements-title {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        .achievements-grid {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .achievement {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 1rem;
+            min-width: 120px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .achievement:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .achievement i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+            color: white;
+        }
+
+        .achievement h4 {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .achievement.locked {
+            filter: grayscale(1);
+            opacity: 0.6;
+        }
+
+        .achievement.locked i {
+            color: #d1d5db;
+        }
+
+        .achievement.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 1.2rem;
+        }
+
+        .voice-select {
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            font-family: inherit;
+        }
+
+        .collaboration-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .collaboration-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .share-link {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 0.8rem 1.2rem;
+            font-family: monospace;
+            flex-grow: 1;
+            border: 1px solid #e5e7eb;
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .copy-btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .ai-suggestion-modal {
+            max-width: 500px;
+        }
+
+        .suggestion-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .suggestion-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(180deg); }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .dark-theme {
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        }
+
+        .dark-theme .form-container,
+        .dark-theme .story-output {
+            background: rgba(31, 41, 55, 0.95);
+            color: var(--text-primary);
+        }
+
+        .dark-theme .input-group input,
+        .dark-theme .input-group select {
+            background: #374151;
+            border-color: #4b5563;
+            color: var(--text-primary);
+        }
+
+        .dark-theme .story-text {
+            background: #374151;
+            color: var(--text-primary);
+        }
+
+        .dark-theme .analytics-item,
+        .dark-theme .tip-item {
+            background: #374151;
+            border-color: #4b5563;
+            color: var(--text-primary);
+        }
+
+        .dark-theme .collaboration-section,
+        .dark-theme .share-link {
+            background: #374151;
+            color: var(--text-primary);
+            border-color: #4b5563;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.2rem;
+            }
+            
+            .header h1 {
+                font-size: 2.3rem;
+            }
+            
+            .story-selector {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-container,
+            .story-output {
+                padding: 2rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .story-analytics {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-bar {
+                gap: 1rem;
+            }
+            
+            .stat-item {
+                padding: 1rem 1.5rem;
+                min-width: 140px;
+            }
+            
+            .collaboration-section {
+                flex-direction: column;
+            }
+            
+            .share-link {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i> Dark Mode
+    </div>
+
+    <div class="auto-save-indicator" id="autoSaveIndicator">
+        <i class="fas fa-save"></i> Auto-saved your progress
+    </div>
+
+    <div class="floating-elements" id="floatingElements">
+        <!-- Floating elements will be generated by JavaScript -->
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Mad Libs Story Generator Pro</h1>
+            <p class="subtitle">Create hilarious, personalized stories with our advanced AI-powered generator. Choose from multiple themes, get intelligent suggestions, and share your masterpieces! <span class="ai-indicator"><i class="fas fa-robot"></i> AI Enhanced</span></p>
+            
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-number" id="storiesGenerated">1,287</span>
+                    <span class="stat-label">Stories Created</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="wordsGenerated">42,958</span>
+                    <span class="stat-label">Words Generated</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="timeSpent">1,865</span>
+                    <span class="stat-label">Minutes Spent</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="story-selector">
+            <div class="story-card active" data-story="fantasy">
+                <span class="feature-badge">Popular</span>
+                <span class="story-card-icon">🏰</span>
+                <h3>Fantasy Adventure</h3>
+                <p>Epic quests, magical creatures, and mystical realms await. Create tales of heroes, wizards, and legendary treasures.</p>
+                <span class="difficulty">Beginner</span>
+            </div>
+            <div class="story-card" data-story="scifi">
+                <span class="story-card-icon">🚀</span>
+                <h3>Sci-Fi Mystery</h3>
+                <p>Futuristic technology, alien encounters, and space adventures. Explore the cosmos and uncover cosmic secrets.</p>
+                <span class="difficulty">Intermediate</span>
+            </div>
+            <div class="story-card" data-story="mystery">
+                <span class="story-card-icon">🔍</span>
+                <h3>Detective Mystery</h3>
+                <p>Solve crimes, uncover clues, and catch criminals. Become the detective in thrilling mystery adventures.</p>
+                <span class="difficulty">Advanced</span>
+            </div>
+            <div class="story-card" data-story="comedy">
+                <span class="feature-badge">New</span>
+                <span class="story-card-icon">🎭</span>
+                <h3>Comedy Central</h3>
+                <p>Hilarious situations, funny characters, and absurd scenarios. Perfect for creating laugh-out-loud moments.</p>
+                <span class="difficulty">Beginner</span>
+            </div>
+            <div class="story-card" data-story="horror">
+                <span class="story-card-icon">👻</span>
+                <h3>Horror Thriller</h3>
+                <p>Spooky scenarios, mysterious creatures, and spine-chilling adventures. Not for the faint of heart!</p>
+                <span class="difficulty">Advanced</span>
+            </div>
+            <div class="story-card" data-story="romance">
+                <span class="story-card-icon">💕</span>
+                <h3>Romance Drama</h3>
+                <p>Love stories, romantic encounters, and heartwarming moments. Create beautiful tales of love and connection.</p>
+                <span class="difficulty">Intermediate</span>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <div class="form-header">
+                <h2 id="formTitle">Create Your Fantasy Adventure</h2>
+                <p id="formDescription">Fill in the fields below to create your personalized story. Click the help icons <i class="fas fa-question-circle" style="color: #4facfe;"></i> for AI-powered suggestions!</p>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 25%;"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progressText">25% Complete</span>
+                    <span id="fieldsRemaining">9 fields remaining</span>
+                </div>
+            </div>
+
+            <form id="madLibsForm">
+                <div class="form-grid" id="formGrid">
+                    <div class="input-group">
+                        <label for="heroName">Hero's Name <span class="help-icon">?</span></label>
+                        <input type="text" id="heroName" placeholder="e.g. Sir Galadorn" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="adjective1">Adjective <span class="help-icon">?</span></label>
+                        <input type="text" id="adjective1" placeholder="e.g. mystical" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="creature">Magical Creature <span class="help-icon">?</span></label>
+                        <input type="text" id="creature" placeholder="e.g. dragon" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="weapon">Weapon <span class="help-icon">?</span></label>
+                        <input type="text" id="weapon" placeholder="e.g. enchanted sword" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="location">Location <span class="help-icon">?</span></label>
+                        <input type="text" id="location" placeholder="e.g. Crystal Caves" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="verb">Action Verb <span class="help-icon">?</span></label>
+                        <input type="text" id="verb" placeholder="e.g. teleport" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="number">Number <span class="help-icon">?</span></label>
+                        <input type="number" id="number" placeholder="e.g. 7" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="emotion">Emotion <span class="help-icon">?</span></label>
+                        <input type="text" id="emotion" placeholder="e.g. terrified" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="object">Magical Object <span class="help-icon">?</span></label>
+                        <input type="text" id="object" placeholder="e.g. crystal orb" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="adjective2">Adjective <span class="help-icon">?</span></label>
+                        <input type="text" id="adjective2" placeholder="e.g. shimmering" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="food">Strange Food <span class="help-icon">?</span></label>
+                        <input type="text" id="food" placeholder="e.g. moonberries" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="sound">Magical Sound <span class="help-icon">?</span></label>
+                        <input type="text" id="sound" placeholder="e.g. harmonic hum" required>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="randomFillBtn">
+                        <i class="fas fa-dice"></i> Random Fill
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="clearFormBtn">
+                        <i class="fas fa-trash-alt"></i> Clear Form
+                    </button>
+                    <button type="button" class="btn btn-accent" id="tipsBtn">
+                        <i class="fas fa-lightbulb"></i> Writing Tips
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="generateBtn">
+                        <i class="fas fa-wand-magic-sparkles"></i> Generate Story
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="story-output" id="storyOutput">
+            <div class="story-header">
+                <h2 id="storyTitle">The Quest for the Crystal Orb</h2>
+                <div class="story-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span id="storyDate">July 7, 2025</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-book"></i>
+                        <span id="storyType">Fantasy Adventure</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span id="readingTime">2 min read</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-analytics">
+                <div class="analytics-item">
+                    <span class="analytics-number" id="wordCount">247</span>
+                    <span class="analytics-label">Words</span>
+                </div>
+                <div class="analytics-item">
+                    <span class="analytics-number" id="sentenceCount">18</span>
+                    <span class="analytics-label">Sentences</span>
+                </div>
+                <div class="analytics-item">
+                    <span class="analytics-number" id="paragraphCount">7</span>
+                    <span class="analytics-label">Paragraphs</span>
+                </div>
+                <div class="analytics-item">
+                    <span class="analytics-number" id="readability">8.2</span>
+                    <span class="analytics-label">Readability</span>
+                </div>
+            </div>
+
+            <div class="story-text">
+                <p>In the <span class="highlight">mystical</span> kingdom of Eldoria, the brave hero <span class="highlight">Sir Galadorn</span> embarked on a perilous quest to retrieve the legendary <span class="highlight">crystal orb</span> from the clutches of a fearsome <span class="highlight">dragon</span>. Armed with his trusty <span class="highlight">enchanted sword</span>, he journeyed deep into the <span class="highlight">Crystal Caves</span> where the beast was said to dwell.</p>
+                
+                <p>As he ventured further, the air grew thick with magic, and strange <span class="highlight">harmonic hum</span> echoed through the caverns. Suddenly, the ground trembled, and a colossal <span class="highlight">dragon</span> emerged, its scales shimmering like <span class="highlight">moonlight</span> on water. Sir Galadorn felt <span class="highlight">terrified</span>, but he stood his ground, raising his <span class="highlight">enchanted sword</span> with trembling hands.</p>
+                
+                <p>"Halt, puny human!" the dragon roared, its voice shaking the very foundations of the <span class="highlight">Crystal Caves</span>. "You dare seek the <span class="highlight">crystal orb</span>? I have guarded it for <span class="highlight">7</span> centuries!"</p>
+                
+                <p>Thinking quickly, Sir Galadorn remembered the ancient spell that could <span class="highlight">teleport</span> him behind the beast. With a swift motion, he cast the spell and found himself standing before the <span class="highlight">crystal orb</span>, pulsating with <span class="highlight">shimmering</span> energy. But just as he reached for it, the dragon unleashed a torrent of fire!</p>
+                
+                <p>Dodging the flames, Sir Galadorn pulled out a pouch of <span class="highlight">moonberries</span> - the dragon's favorite treat. "A peace offering!" he shouted, tossing the berries toward the beast. The dragon paused, sniffed the air, and began munching contentedly.</p>
+                
+                <p>Seizing the opportunity, Sir Galadorn grabbed the <span class="highlight">crystal orb</span> and made his escape, the dragon too preoccupied with the delicious <span class="highlight">moonberries</span> to notice. As he emerged from the caves, the orb began to glow, filling him with a sense of accomplishment and a strange desire for more <span class="highlight">moonberries</span>.</p>
+                
+                <p>And so, Eldoria was saved, all thanks to Sir Galadorn's courage, quick thinking, and a well-timed snack of <span class="highlight">moonberries</span>.</p>
+            </div>
+
+            <div class="voice-controls">
+                <div class="voice-control">
+                    <i class="fas fa-volume-up"></i>
+                    <label for="voiceSpeed">Speed:</label>
+                    <input type="range" id="voiceSpeed" min="0.5" max="2" value="1" step="0.1">
+                </div>
+                <div class="voice-control">
+                    <i class="fas fa-microphone-alt"></i>
+                    <label for="voicePitch">Pitch:</label>
+                    <input type="range" id="voicePitch" min="0" max="2" value="1" step="0.1">
+                </div>
+                <div class="voice-control">
+                    <i class="fas fa-user"></i>
+                    <label for="voiceSelect">Voice:</label>
+                    <select id="voiceSelect" class="voice-select">
+                        <option value="default">Default</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+                <button class="btn btn-success" id="speakBtn">
+                    <i class="fas fa-play"></i> Listen to Story
+                </button>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="newStoryBtn">
+                    <i class="fas fa-plus"></i> Create New Story
+                </button>
+                <button class="btn btn-accent" id="shareBtn">
+                    <i class="fas fa-share-alt"></i> Share Story
+                </button>
+                <button class="btn btn-secondary" id="saveBtn">
+                    <i class="fas fa-save"></i> Save Story
+                </button>
+                <button class="btn btn-secondary" id="printBtn">
+                    <i class="fas fa-print"></i> Print Story
+                </button>
+            </div>
+
+            <div class="collaboration-section">
+                <div class="collaboration-content">
+                    <i class="fas fa-users" style="font-size: 1.5rem; color: #4facfe;"></i>
+                    <div>
+                        <h3>Collaborate with Friends</h3>
+                        <p>Share this link to create stories together in real-time</p>
+                    </div>
+                </div>
+                <div class="collaboration-actions">
+                    <div class="share-link" id="shareLink">https://madlibs.pro/collab/xyz123</div>
+                    <button class="copy-btn" id="copyLinkBtn">Copy Link</button>
+                </div>
+            </div>
+
+            <div class="export-options">
+                <a href="#" class="export-btn" id="exportPdf"><i class="fas fa-file-pdf"></i> Export as PDF</a>
+                <a href="#" class="export-btn" id="exportWord"><i class="fas fa-file-word"></i> Export as Word</a>
+                <a href="#" class="export-btn" id="exportText"><i class="fas fa-file-alt"></i> Export as Text</a>
+            </div>
+        </div>
+
+        <div class="achievements-container">
+            <h3 class="achievements-title">Your Achievements</h3>
+            <div class="achievements-grid">
+                <div class="achievement">
+                    <i class="fas fa-book"></i>
+                    <h4>Storyteller</h4>
+                </div>
+                <div class="achievement">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                    <h4>Creative Genius</h4>
+                </div>
+                <div class="achievement locked">
+                    <i class="fas fa-crown"></i>
+                    <h4>Master Author</h4>
+                </div>
+                <div class="achievement locked">
+                    <i class="fas fa-globe"></i>
+                    <h4>World Builder</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Mad Libs Story Generator Pro © 2025 | Created with ❤️ for Microsoft Recruiters | <a href="#"><i class="fas fa-code"></i> View Source Code</a></p>
+        </div>
+    </div>
+
+    <!-- Modal for Writing Tips -->
+    <div class="modal" id="tipsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Creative Writing Tips</h2>
+                <button class="modal-close" id="closeTipsModal">&times;</button>
+            </div>
+            <div class="tips-grid">
+                <div class="tip-item">
+                    <i class="fas fa-lightbulb"></i>
+                    <div class="tip-content">
+                        <h3>Be Specific</h3>
+                        <p>Instead of generic words, choose specific and vivid descriptions. For example, instead of "big tree," try "ancient oak tree with gnarled branches."</p>
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <i class="fas fa-theater-masks"></i>
+                    <div class="tip-content">
+                        <h3>Use All Senses</h3>
+                        <p>Engage multiple senses in your descriptions. Mention not just how things look, but how they sound, smell, feel, and even taste.</p>
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <i class="fas fa-running"></i>
+                    <div class="tip-content">
+                        <h3>Action Verbs</h3>
+                        <p>Choose strong action verbs that convey precise meaning. Instead of "went," try "dashed," "strolled," or "teleported."</p>
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <i class="fas fa-laugh-beam"></i>
+                    <div class="tip-content">
+                        <h3>Add Humor</h3>
+                        <p>Unexpected or absurd combinations often create the funniest results. Try pairing serious situations with silly elements.</p>
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <i class="fas fa-magic"></i>
+                    <div class="tip-content">
+                        <h3>Story Structure</h3>
+                        <p>Great stories often follow a pattern: introduction, rising action, climax, falling action, and resolution. Try to include these elements.</p>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-primary" id="startTutorialBtn">
+                    <i class="fas fa-play-circle"></i> Start Interactive Tutorial
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for AI Suggestions -->
+    <div class="modal" id="suggestionModal">
+        <div class="modal-content ai-suggestion-modal">
+            <div class="modal-header">
+                <h2>AI-Powered Suggestions</h2>
+                <button class="modal-close" id="closeSuggestionModal">&times;</button>
+            </div>
+            <div class="suggestion-title">We recommend these words for <span id="suggestionCategory">adjective</span>:</div>
+            <div class="suggestion-list" id="suggestionList">
+                <!-- Suggestions will be populated here -->
+            </div>
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <button class="btn btn-accent" id="regenerateSuggestions">
+                    <i class="fas fa-sync"></i> Generate More Suggestions
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const themeToggle = document.getElementById('themeToggle');
+        const storyCards = document.querySelectorAll('.story-card');
+        const storyOutput = document.getElementById('storyOutput');
+        const tipsBtn = document.getElementById('tipsBtn');
+        const tipsModal = document.getElementById('tipsModal');
+        const closeTipsModal = document.getElementById('closeTipsModal');
+        const generateBtn = document.getElementById('generateBtn');
+        const randomFillBtn = document.getElementById('randomFillBtn');
+        const clearFormBtn = document.getElementById('clearFormBtn');
+        const newStoryBtn = document.getElementById('newStoryBtn');
+        const speakBtn = document.getElementById('speakBtn');
+        const autoSaveIndicator = document.getElementById('autoSaveIndicator');
+        const floatingElements = document.getElementById('floatingElements');
+        const suggestionModal = document.getElementById('suggestionModal');
+        const closeSuggestionModal = document.getElementById('closeSuggestionModal');
+        const suggestionList = document.getElementById('suggestionList');
+        const suggestionCategory = document.getElementById('suggestionCategory');
+        const regenerateSuggestions = document.getElementById('regenerateSuggestions');
+        const exportPdf = document.getElementById('exportPdf');
+        const exportWord = document.getElementById('exportWord');
+        const exportText = document.getElementById('exportText');
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        
+        // Current state
+        let currentStoryType = 'fantasy';
+        let isSpeaking = false;
+        let currentUtterance = null;
+        let currentHelpInput = null;
+        
+        // Theme Toggle
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-theme');
+            const isDarkMode = document.body.classList.contains('dark-theme');
+            themeToggle.innerHTML = isDarkMode ? 
+                '<i class="fas fa-sun"></i> Light Mode' : 
+                '<i class="fas fa-moon"></i> Dark Mode';
+        });
+        
+        // Story Card Selection
+        storyCards.forEach(card => {
+            card.addEventListener('click', () => {
+                storyCards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                currentStoryType = card.dataset.story;
+                document.getElementById('formTitle').textContent = `Create Your ${card.querySelector('h3').textContent}`;
+                updateFormDescription(currentStoryType);
+            });
+        });
+        
+        // Update form description based on story type
+        function updateFormDescription(storyType) {
+            const descriptions = {
+                fantasy: "Fill in magical words to create your epic fantasy adventure.",
+                scifi: "Enter futuristic terms to build your sci-fi space odyssey.",
+                mystery: "Provide clues and suspects for your detective mystery.",
+                comedy: "Add hilarious words to create your comedy masterpiece.",
+                horror: "Enter spooky terms for your bone-chilling horror story.",
+                romance: "Provide romantic words for your heartwarming love story."
+            };
+            
+            document.getElementById('formDescription').textContent = descriptions[storyType] || "Fill in the fields below to create your personalized story.";
+        }
+        
+        // Modal Controls
+        tipsBtn.addEventListener('click', () => {
+            tipsModal.classList.add('active');
+        });
+        
+        closeTipsModal.addEventListener('click', () => {
+            tipsModal.classList.remove('active');
+        });
+        
+        closeSuggestionModal.addEventListener('click', () => {
+            suggestionModal.classList.remove('active');
+        });
+        
+        // Close modals when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === tipsModal) {
+                tipsModal.classList.remove('active');
+            }
+            if (e.target === suggestionModal) {
+                suggestionModal.classList.remove('active');
+            }
+        });
+        
+        // Form Submission
+        generateBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Validate form
+            let isValid = true;
+            const inputs = document.querySelectorAll('#madLibsForm input');
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('error');
+                    isValid = false;
+                    setTimeout(() => input.classList.remove('error'), 1000);
+                } else {
+                    input.classList.add('success');
+                    setTimeout(() => input.classList.remove('success'), 1000);
+                }
+            });
+            
+            if (!isValid) {
+                showToast('❌ Please fill all fields!', 'error');
+                return;
+            }
+            
+            // Show toast notification
+            showToast('✨ Story generated successfully!', 'success');
+            
+            // Show story output with animation
+            storyOutput.style.display = 'block';
+            storyOutput.scrollIntoView({ behavior: 'smooth' });
+            
+            // Update stats
+            updateStats();
+            
+            // Update story metadata
+            const today = new Date();
+            document.getElementById('storyDate').textContent = today.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            document.getElementById('storyType').textContent = document.querySelector('.story-card.active h3').textContent;
+        });
+        
+        // New Story Button
+        newStoryBtn.addEventListener('click', () => {
+            storyOutput.style.display = 'none';
+            document.getElementById('madLibsForm').reset();
+            document.getElementById('progressFill').style.width = '25%';
+            document.getElementById('progressText').textContent = '25% Complete';
+            document.getElementById('fieldsRemaining').textContent = '9 fields remaining';
+            showToast('🔄 Form cleared. Ready for new story!', 'success');
+        });
+        
+        // Random Fill Button
+        randomFillBtn.addEventListener('click', () => {
+            const fantasyWords = {
+                heroName: ['Sir Galadorn', 'Lady Elara', 'Thorn the Brave', 'Zephyr Windrider'],
+                adjective1: ['mystical', 'ancient', 'enchanted', 'forgotten'],
+                creature: ['dragon', 'griffin', 'unicorn', 'phoenix'],
+                weapon: ['enchanted sword', 'crystal staff', 'dragonbone bow', 'lightning hammer'],
+                location: ['Crystal Caves', 'Emerald Forest', 'Sky Citadel', 'Misty Peaks'],
+                verb: ['teleport', 'summon', 'levitate', 'transform'],
+                number: [3, 7, 13, 100],
+                emotion: ['terrified', 'exhilarated', 'awestruck', 'determined'],
+                object: ['crystal orb', 'dragon egg', 'phoenix feather', 'star map'],
+                adjective2: ['shimmering', 'glowing', 'pulsating', 'radiant'],
+                food: ['moonberries', 'dragonfruit', 'starlight nectar', 'sunroot'],
+                sound: ['harmonic hum', 'ethereal choir', 'dragon roar', 'crystal chime']
+            };
+            
+            for (const id in fantasyWords) {
+                const randomIndex = Math.floor(Math.random() * fantasyWords[id].length);
+                document.getElementById(id).value = fantasyWords[id][randomIndex];
+            }
+            
+            document.getElementById('progressFill').style.width = '100%';
+            document.getElementById('progressText').textContent = '100% Complete';
+            document.getElementById('fieldsRemaining').textContent = 'All fields completed!';
+            
+            showToast('🎲 Form filled with random words!', 'success');
+        });
+        
+        // Clear Form Button
+        clearFormBtn.addEventListener('click', () => {
+            document.getElementById('madLibsForm').reset();
+            document.getElementById('progressFill').style.width = '25%';
+            document.getElementById('progressText').textContent = '25% Complete';
+            document.getElementById('fieldsRemaining').textContent = '9 fields remaining';
+            showToast('🗑️ Form cleared successfully!', 'success');
+        });
+        
+        // Text-to-Speech
+        speakBtn.addEventListener('click', () => {
+            if (isSpeaking) {
+                // Pause speaking
+                speechSynthesis.cancel();
+                speakBtn.innerHTML = '<i class="fas fa-play"></i> Listen to Story';
+                isSpeaking = false;
+                return;
+            }
+            
+            const storyText = document.querySelector('.story-text').textContent;
+            const utterance = new SpeechSynthesisUtterance(storyText);
+            
+            // Set voice options
+            utterance.rate = parseFloat(document.getElementById('voiceSpeed').value);
+            utterance.pitch = parseFloat(document.getElementById('voicePitch').value);
+            
+            // Select voice type
+            const voiceType = document.getElementById('voiceSelect').value;
+            const voices = speechSynthesis.getVoices();
+            if (voiceType === 'male' && voices.some(v => v.name.includes('Male'))) {
+                utterance.voice = voices.find(v => v.name.includes('Male'));
+            } else if (voiceType === 'female' && voices.some(v => v.name.includes('Female'))) {
+                utterance.voice = voices.find(v => v.name.includes('Female'));
+            }
+            
+            // Speak the story
+            speechSynthesis.speak(utterance);
+            showToast('🔊 Now reading your story aloud...', 'success');
+            
+            // Update button during playback
+            speakBtn.innerHTML = '<i class="fas fa-pause"></i> Pause Reading';
+            isSpeaking = true;
+            currentUtterance = utterance;
+            
+            // Change button back when done
+            utterance.onend = () => {
+                speakBtn.innerHTML = '<i class="fas fa-play"></i> Listen to Story';
+                isSpeaking = false;
+            };
+        });
+        
+        // Auto-save simulation
+        setInterval(() => {
+            autoSaveIndicator.classList.add('show');
+            setTimeout(() => {
+                autoSaveIndicator.classList.remove('show');
+            }, 2000);
+        }, 30000);
+        
+        // Create floating elements
+        function createFloatingElements() {
+            const colors = ['#667eea', '#764ba2', '#4facfe', '#00f2fe', '#f093fb', '#f5576c'];
+            for (let i = 0; i < 15; i++) {
+                const element = document.createElement('div');
+                element.classList.add('floating-element');
+                
+                // Random properties
+                const size = Math.random() * 80 + 20;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const top = Math.random() * 100;
+                const left = Math.random() * 100;
+                const animationDuration = Math.random() * 15 + 10;
+                const opacity = Math.random() * 0.4 + 0.1;
+                
+                element.style.width = `${size}px`;
+                element.style.height = `${size}px`;
+                element.style.background = `radial-gradient(circle, ${color}, transparent)`;
+                element.style.top = `${top}%`;
+                element.style.left = `${left}%`;
+                element.style.animationDuration = `${animationDuration}s`;
+                element.style.opacity = opacity;
+                
+                floatingElements.appendChild(element);
+            }
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.classList.add('toast', type);
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 500);
+            }, 3000);
+        }
+        
+        // Update stats counters
+        function updateStats() {
+            const storiesElement = document.getElementById('storiesGenerated');
+            const wordsElement = document.getElementById('wordsGenerated');
+            const timeElement = document.getElementById('timeSpent');
+            
+            // Animate counters
+            animateCounter(storiesElement, 1287, 1288, 1000);
+            animateCounter(wordsElement, 42958, 43000, 1000);
+            animateCounter(timeElement, 1865, 1870, 1000);
+        }
+        
+        // Animate counter
+        function animateCounter(element, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                element.textContent = value.toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+        
+        // AI Suggestions
+        function showSuggestions(inputId) {
+            const input = document.getElementById(inputId);
+            const label = input.previousElementSibling.textContent;
+            
+            // Get the category from the label
+            const category = label.replace('?', '').trim();
+            suggestionCategory.textContent = category;
+            
+            // Clear previous suggestions
+            suggestionList.innerHTML = '';
+            
+            // Generate AI suggestions
+            const suggestions = generateAISuggestions(category);
+            
+            // Add suggestions to the list
+            suggestions.forEach(suggestion => {
+                const item = document.createElement('div');
+                item.classList.add('suggestion-item');
+                item.innerHTML = `
+                    <i class="fas fa-lightbulb"></i>
+                    <span>${suggestion}</span>
+                `;
+                item.addEventListener('click', () => {
+                    input.value = suggestion;
+                    suggestionModal.classList.remove('active');
+                });
+                suggestionList.appendChild(item);
+            });
+            
+            // Show the modal
+            suggestionModal.classList.add('active');
+            currentHelpInput = inputId;
+        }
+        
+        // Generate AI suggestions
+        function generateAISuggestions(category) {
+            const suggestionMap = {
+                "Hero's Name": ['Sir Galadorn', 'Lady Elara', 'Thorn the Brave', 'Zephyr Windrider', 'Aeliana Stormrider'],
+                "Adjective": ['mystical', 'ancient', 'enchanted', 'forgotten', 'radiant', 'ethereal'],
+                "Magical Creature": ['dragon', 'griffin', 'unicorn', 'phoenix', 'basilisk', 'kraken'],
+                "Weapon": ['enchanted sword', 'crystal staff', 'dragonbone bow', 'lightning hammer', 'frost dagger'],
+                "Location": ['Crystal Caves', 'Emerald Forest', 'Sky Citadel', 'Misty Peaks', 'Obsidian Desert'],
+                "Action Verb": ['teleport', 'summon', 'levitate', 'transform', 'conjure', 'disintegrate'],
+                "Number": [3, 7, 13, 42, 100, 1000],
+                "Emotion": ['terrified', 'exhilarated', 'awestruck', 'determined', 'ecstatic', 'melancholic'],
+                "Magical Object": ['crystal orb', 'dragon egg', 'phoenix feather', 'star map', 'time shard'],
+                "Strange Food": ['moonberries', 'dragonfruit', 'starlight nectar', 'sunroot', 'cloud candy'],
+                "Magical Sound": ['harmonic hum', 'ethereal choir', 'dragon roar', 'crystal chime', 'whispering wind']
+            };
+            
+            // Return suggestions for the category or default if not found
+            return suggestionMap[category] || ['suggestion 1', 'suggestion 2', 'suggestion 3'];
+        }
+        
+        // Regenerate suggestions
+        regenerateSuggestions.addEventListener('click', () => {
+            if (currentHelpInput) {
+                showSuggestions(currentHelpInput);
+            }
+        });
+        
+        // Export as PDF
+        exportPdf.addEventListener('click', (e) => {
+            e.preventDefault();
+            const element = document.querySelector('.story-output');
+            const opt = {
+                margin: 1,
+                filename: 'madlibs-story.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save();
+            showToast('📄 Exported as PDF!', 'success');
+        });
+        
+        // Export as Word (simulated)
+        exportWord.addEventListener('click', (e) => {
+            e.preventDefault();
+            showToast('📝 Export to Word is coming soon!', 'warning');
+        });
+        
+        // Export as Text
+        exportText.addEventListener('click', (e) => {
+            e.preventDefault();
+            const storyText = document.querySelector('.story-text').textContent;
+            const blob = new Blob([storyText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'madlibs-story.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('📝 Exported as Text!', 'success');
+        });
+        
+        // Copy share link
+        copyLinkBtn.addEventListener('click', () => {
+            const shareLink = document.getElementById('shareLink');
+            navigator.clipboard.writeText(shareLink.textContent);
+            showToast('🔗 Link copied to clipboard!', 'success');
+        });
+        
+        // Share story
+        shareBtn.addEventListener('click', () => {
+            const storyText = document.querySelector('.story-text').textContent;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My Mad Libs Story',
+                    text: 'Check out this hilarious story I created:',
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(storyText);
+                showToast('📋 Story copied to clipboard!', 'success');
+            }
+        });
+        
+        // Help icon click event
+        document.querySelectorAll('.help-icon').forEach(icon => {
+            icon.addEventListener('click', (e) => {
+                const inputId = e.target.closest('.input-group').querySelector('input').id;
+                showSuggestions(inputId);
+            });
+        });
+        
+        // Form progress tracking
+        document.querySelectorAll('#madLibsForm input').forEach(input => {
+            input.addEventListener('input', () => {
+                const inputs = document.querySelectorAll('#madLibsForm input');
+                const filledInputs = Array.from(inputs).filter(input => input.value.trim() !== '').length;
+                const totalInputs = inputs.length;
+                const progress = (filledInputs / totalInputs) * 100;
+                
+                document.getElementById('progressFill').style.width = `${progress}%`;
+                document.getElementById('progressText').textContent = `${Math.round(progress)}% Complete`;
+                document.getElementById('fieldsRemaining').textContent = 
+                    `${totalInputs - filledInputs} fields remaining`;
+            });
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            createFloatingElements();
+            
+            // Simulate some form interaction
+            setTimeout(() => {
+                document.getElementById('progressFill').style.width = '25%';
+                document.getElementById('progressText').textContent = '25% Complete';
+                document.getElementById('fieldsRemaining').textContent = '9 fields remaining';
+            }, 500);
+            
+            // Show welcome toast
+            setTimeout(() => {
+                showToast('🚀 Welcome to Mad Libs Story Generator Pro!', 'success');
+            }, 1000);
+            
+            // Load voices for text-to-speech
+            speechSynthesis.getVoices();
+        });
+    </script>
+</body>
+</html>
