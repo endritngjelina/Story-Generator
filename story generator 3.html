@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Mad Libs Story Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Enhanced CSS with Microsoft Fluent Design principles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #0067b8 0%, #2b579a 100%);
+            --secondary-gradient: linear-gradient(135deg, #00b294 0%, #018574 100%);
+            --accent-gradient: linear-gradient(135deg, #ffb900 0%, #d83b01 100%);
+            --success-gradient: linear-gradient(135deg, #107c10 0%, #13a10e 100%);
+            --warning-gradient: linear-gradient(135deg, #d13438 0%, #a4262c 100%);
+            --dark-gradient: linear-gradient(135deg, #201f1e 0%, #323130 100%);
+            --glass-bg: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --text-light: #ffffff;
+            --text-dark: #323130;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--dark-gradient);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+            overflow-x: hidden;
+            color: var(--text-light);
+        }
+
+        /* Particle background animation */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 60px; height: 60px; left: 20%; animation-delay: 2s; }
+        .particle:nth-child(3) { width: 40px; height: 40px; left: 30%; animation-delay: 4s; }
+        .particle:nth-child(4) { width: 100px; height: 100px; left: 40%; animation-delay: 6s; }
+        .particle:nth-child(5) { width: 50px; height: 50px; left: 50%; animation-delay: 8s; }
+        .particle:nth-child(6) { width: 70px; height: 70px; left: 60%; animation-delay: 10s; }
+        .particle:nth-child(7) { width: 30px; height: 30px; left: 70%; animation-delay: 12s; }
+        .particle:nth-child(8) { width: 90px; height: 90px; left: 80%; animation-delay: 14s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            50% { transform: translateY(-10vh) rotate(180deg); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            animation: containerSlide 0.8s ease-out;
+            position: relative;
+        }
+
+        @keyframes containerSlide {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 50px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: headerPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes headerPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.3; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 0.1; }
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+            font-weight: 300;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .header-icons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .header-icon {
+            background: rgba(255, 255, 255, 0.15);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            transition: var(--transition);
+        }
+
+        .header-icon:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .main-content {
+            padding: 40px 30px;
+            position: relative;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            text-align: center;
+            min-width: 180px;
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #ffb900;
+        }
+
+        .stat-card .number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stat-card .label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .template-selector {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .template-selector h2 {
+            color: white;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .template-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            animation: fadeInUp 0.8s ease-out 0.5s both;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .template-btn {
+            padding: 18px 35px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            min-width: 180px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .template-btn i {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .template-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .template-btn:hover::before {
+            left: 100%;
+        }
+
+        .template-btn.fantasy {
+            background: linear-gradient(135deg, rgba(168, 237, 234, 0.2) 0%, rgba(254, 214, 227, 0.2) 100%);
+            color: #ffffff;
+        }
+
+        .template-btn.scifi {
+            background: linear-gradient(135deg, rgba(116, 185, 255, 0.2) 0%, rgba(9, 132, 227, 0.2) 100%);
+            color: white;
+        }
+
+        .template-btn.mystery {
+            background: linear-gradient(135deg, rgba(253, 121, 168, 0.2) 0%, rgba(253, 203, 110, 0.2) 100%);
+            color: #ffffff;
+        }
+
+        .template-btn.romance {
+            background: linear-gradient(135deg, rgba(255, 138, 216, 0.2) 0%, rgba(255, 112, 166, 0.2) 100%);
+            color: white;
+        }
+
+        .template-btn.horror {
+            background: linear-gradient(135deg, rgba(101, 31, 255, 0.2) 0%, rgba(187, 0, 47, 0.2) 100%);
+            color: white;
+        }
+
+        .template-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .template-btn.active {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+
+        .form-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            margin-bottom: 40px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .form-section::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #0067b8, #2b579a, #0067b8);
+            border-radius: var(--border-radius);
+            z-index: -1;
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        .form-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .form-section h3 {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .input-group label {
+            font-weight: 500;
+            color: white;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group input {
+            padding: 16px 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            transition: var(--transition);
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(5px);
+            color: white;
+            font-weight: 500;
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #00bcf2;
+            box-shadow: 0 0 20px rgba(0, 188, 242, 0.3);
+            background: rgba(255,255,255,0.15);
+        }
+
+        .input-group.error input {
+            border-color: #d13438;
+            animation: inputShake 0.5s ease-in-out;
+            box-shadow: 0 0 20px rgba(209, 52, 56, 0.3);
+        }
+
+        @keyframes inputShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .input-group.error .error-message {
+            display: block;
+            animation: errorFade 0.3s ease-in;
+        }
+
+        @keyframes errorFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 18px 40px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+            min-width: 200px;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            transition: left 0.6s;
+        }
+
+        .action-btn:hover::before {
+            left: 100%;
+        }
+
+        .generate-btn {
+            background: var(--success-gradient);
+            color: white;
+            box-shadow: 0 10px 25px rgba(16, 124, 16, 0.3);
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #605e5c 0%, #8a8886 100%);
+            color: white;
+            box-shadow: 0 10px 25px rgba(96, 94, 92, 0.3);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .story-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            margin-top: 40px;
+            display: none;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .story-section::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00b294, #018574, #00b294);
+            border-radius: var(--border-radius);
+            z-index: -1;
+            animation: storyBorderGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes storyBorderGlow {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+
+        .story-section.show {
+            display: block;
+            animation: storyReveal 0.8s ease-out;
+        }
+
+        @keyframes storyReveal {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .story-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .story-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .story-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .story-content {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 35px;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #201f1e;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255,255,255,0.3);
+            font-family: 'Georgia', serif;
+        }
+
+        .story-content p {
+            margin-bottom: 20px;
+        }
+
+        .highlight {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 600;
+        }
+
+        .story-actions {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .story-action-btn {
+            padding: 16px 30px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            min-width: 180px;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .story-action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .story-action-btn:hover::before {
+            left: 100%;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #0067b8 0%, #2b579a 100%);
+            color: white;
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #107c10 0%, #13a10e 100%);
+            color: white;
+        }
+
+        .speak-btn {
+            background: linear-gradient(135deg, #d83b01 0%, #ff8c00 100%);
+            color: white;
+        }
+
+        .new-story-btn {
+            background: linear-gradient(135deg, #881798 0%, #b146c2 100%);
+            color: white;
+        }
+
+        .story-action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: var(--success-gradient);
+            color: white;
+            padding: 20px 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: var(--transition);
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            background: var(--warning-gradient);
+        }
+
+        /* Floating action button */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(255, 185, 0, 0.3);
+            transition: var(--transition);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 35px rgba(255, 185, 0, 0.4);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 40px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive design */
+        @media (max-width: 992px) {
+            .header h1 {
+                font-size: 2.4rem;
+            }
+            
+            .stat-card {
+                min-width: 150px;
+            }
+            
+            .template-btn {
+                min-width: 160px;
+                padding: 16px 20px;
+            }
+            
+            .action-btn, .story-action-btn {
+                min-width: 160px;
+                padding: 16px 25px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 12px;
+            }
+            
+            .header {
+                padding: 40px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 30px 20px;
+            }
+            
+            .template-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .template-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions, .story-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-btn, .story-action-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .story-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .story-meta {
+                justify-content: center;
+            }
+            
+            .fab {
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+
+        /* Enhanced micro-interactions */
+        .input-group input:valid {
+            border-color: #13a10e;
+        }
+
+        /* Accessibility focus styles */
+        button:focus, input:focus {
+            outline: 2px solid #00bcf2;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-book-open"></i> Advanced Mad Libs Story Generator</h1>
+            <p>Create unique, engaging stories with AI-powered templates. Perfect for creative writing, education, and entertainment. Unleash your imagination!</p>
+            <div class="header-icons">
+                <div class="header-icon"><i class="fas fa-magic"></i></div>
+                <div class="header-icon"><i class="fas fa-robot"></i></div>
+                <div class="header-icon"><i class="fas fa-book"></i></div>
+                <div class="header-icon"><i class="fas fa-star"></i></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <i class="fas fa-file-alt"></i>
+                    <div class="number">5</div>
+                    <div class="label">Story Templates</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <div class="number">12,487</div>
+                    <div class="label">Stories Created</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-globe"></i>
+                    <div class="number">143</div>
+                    <div class="label">Countries</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-heart"></i>
+                    <div class="number">98%</div>
+                    <div class="label">Satisfaction</div>
+                </div>
+            </div>
+
+            <div class="template-selector">
+                <h2><i class="fas fa-compass"></i> Choose Your Story Genre</h2>
+                <div class="template-buttons">
+                    <button class="template-btn fantasy active" data-template="fantasy">
+                        <i class="fas fa-dragon"></i>
+                        Fantasy
+                    </button>
+                    <button class="template-btn scifi" data-template="scifi">
+                        <i class="fas fa-rocket"></i>
+                        Sci-Fi
+                    </button>
+                    <button class="template-btn mystery" data-template="mystery">
+                        <i class="fas fa-search"></i>
+                        Mystery
+                    </button>
+                    <button class="template-btn romance" data-template="romance">
+                        <i class="fas fa-heart"></i>
+                        Romance
+                    </button>
+                    <button class="template-btn horror" data-template="horror">
+                        <i class="fas fa-ghost"></i>
+                        Horror
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="fas fa-feather-alt"></i> <span id="form-title">Fantasy Adventure Words</span></h3>
+                <form id="mad-libs-form">
+                    <div class="form-grid" id="form-grid">
+                        <!-- Dynamic form fields will be inserted here -->
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="action-btn generate-btn" id="generate-btn">
+                            <i class="fas fa-wand-magic-sparkles"></i> Generate Story
+                        </button>
+                        <button type="button" class="action-btn reset-btn" id="reset-btn">
+                            <i class="fas fa-undo"></i> Reset Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="story-section" id="story-section">
+                <div class="story-header">
+                    <div class="story-title"><i class="fas fa-book"></i> <span id="story-title">Your Story</span></div>
+                    <div class="story-meta">
+                        <span><i class="fas fa-calendar"></i> <span id="story-date"></span></span>
+                        <span><i class="fas fa-clock"></i> <span id="story-time"></span></span>
+                    </div>
+                </div>
+                <div class="story-content" id="story-content">
+                    <!-- Generated story will appear here -->
+                </div>
+                <div class="story-actions">
+                    <button class="story-action-btn download-btn" id="download-btn">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                    <button class="story-action-btn copy-btn" id="copy-btn">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button class="story-action-btn speak-btn" id="speak-btn">
+                        <i class="fas fa-volume-up"></i> Listen
+                    </button>
+                    <button class="story-action-btn new-story-btn" id="new-story-btn">
+                        <i class="fas fa-plus"></i> New Story
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Advanced Mad Libs Story Generator © 2023 | Built with <i class="fas fa-heart"></i> for Microsoft Recruiter Review</p>
+            <p>All stories are AI-generated and for entertainment purposes only</p>
+        </div>
+    </div>
+
+    <button class="fab" id="scroll-top" title="Scroll to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script>
+        // Enhanced story templates with Microsoft-themed content
+        const storyTemplates = {
+            fantasy: {
+                title: "Fantasy Adventure",
+                fields: [
+                    { name: "heroName", label: "Hero's Name", type: "text", placeholder: "e.g., Aragorn", icon: "fas fa-user" },
+                    { name: "adjective1", label: "Brave Adjective", type: "text", placeholder: "e.g., courageous", icon: "fas fa-shield-alt" },
+                    { name: "creature", label: "Magical Creature", type: "text", placeholder: "e.g., dragon", icon: "fas fa-dragon" },
+                    { name: "place", label: "Mystical Place", type: "text", placeholder: "e.g., Enchanted Forest", icon: "fas fa-tree" },
+                    { name: "weapon", label: "Legendary Weapon", type: "text", placeholder: "e.g., Excalibur", icon: "fas fa-sword" },
+                    { name: "adjective2", label: "Scary Adjective", type: "text", placeholder: "e.g., terrifying", icon: "fas fa-skull" },
+                    { name: "villain", label: "Dark Villain", type: "text", placeholder: "e.g., Sauron", icon: "fas fa-mask" },
+                    { name: "power", label: "Magical Power", type: "text", placeholder: "e.g., telekinesis", icon: "fas fa-magic" },
+                    { name: "treasure", label: "Ancient Treasure", type: "text", placeholder: "e.g., Crystal of Eternity", icon: "fas fa-gem" },
+                    { name: "emotion", label: "Triumphant Emotion", type: "text", placeholder: "e.g., victorious", icon: "fas fa-trophy" }
+                ],
+                template: `In the <span class="highlight">{adjective1}</span> realm of <span class="highlight">{place}</span>, where magic flows like rivers of starlight, lived a legendary hero named <span class="highlight">{heroName}</span>. This <span class="highlight">{adjective1}</span> warrior was known throughout the land for their unmatched bravery and pure heart.
+
+One fateful dawn, when the mists of time parted like ancient curtains, <span class="highlight">{heroName}</span> encountered a magnificent <span class="highlight">{creature}</span> whose scales shimmered with the power of a thousand suns. The <span class="highlight">{creature}</span> spoke in riddles of the <span class="highlight">{adjective2}</span> curse that had befallen the sacred <span class="highlight">{place}</span>.
+
+"Only the wielder of the legendary <span class="highlight">{weapon}</span> can break the dark enchantment," whispered the <span class="highlight">{creature}</span>, its eyes glowing with ancient wisdom. "But beware, for the <span class="highlight">{adjective2}</span> <span class="highlight">{villain}</span> guards the <span class="highlight">{treasure}</span> with the forbidden power of <span class="highlight">{power}</span>."
+
+<span class="highlight">{heroName}</span> embarked on the most perilous quest ever undertaken. Through shadow-haunted valleys and across bridges of solidified moonbeams, our hero pressed forward. The final battle was epic beyond imagination – magic clashed against magic, light against darkness, hope against despair.
+
+When the dust settled and the last echoes of battle faded, <span class="highlight">{heroName}</span> stood triumphant, the <span class="highlight">{treasure}</span> gleaming in their hands. The curse was broken, the <span class="highlight">{place}</span> was restored to its former glory, and <span class="highlight">{heroName}</span> felt incredibly <span class="highlight">{emotion}</span>. The <span class="highlight">{creature}</span> became the hero's eternal guardian, and together they protected the realm for generations to come.
+
+✨ <em>And so ends another tale of courage, magic, and the eternal triumph of good over evil...</em>`
+            },
+            scifi: {
+                title: "Sci-Fi Adventure",
+                fields: [
+                    { name: "captainName", label: "Captain's Name", type: "text", placeholder: "e.g., Captain Nova", icon: "fas fa-user-astronaut" },
+                    { name: "planet", label: "Alien Planet", type: "text", placeholder: "e.g., Zephyria Prime", icon: "fas fa-globe-americas" },
+                    { name: "technology", label: "Advanced Tech", type: "text", placeholder: "e.g., quantum teleporter", icon: "fas fa-microchip" },
+                    { name: "alienSpecies", label: "Alien Species", type: "text", placeholder: "e.g., Crystalline Beings", icon: "fas fa-atom" },
+                    { name: "adjective1", label: "Futuristic Adjective", type: "text", placeholder: "e.g., holographic", icon: "fas fa-vr-cardboard" },
+                    { name: "spaceship", label: "Starship Name", type: "text", placeholder: "e.g., Nebula Chaser", icon: "fas fa-rocket" },
+                    { name: "crisis", label: "Galactic Crisis", type: "text", placeholder: "e.g., quantum singularity", icon: "fas fa-exclamation-triangle" },
+                    { name: "aiName", label: "AI Companion", type: "text", placeholder: "e.g., Synthia", icon: "fas fa-robot" },
+                    { name: "energySource", label: "Energy Source", type: "text", placeholder: "e.g., dark matter", icon: "fas fa-bolt" },
+                    { name: "verb", label: "Action Verb", type: "text", placeholder: "e.g., transcend", icon: "fas fa-running" }
+                ],
+                template: `Captain <span class="highlight">{captainName}</span> stood on the bridge of the <span class="highlight">{spaceship}</span>, gazing at the swirling nebula on the main viewscreen. Their mission: to prevent the <span class="highlight">{crisis}</span> that threatened the entire Andromeda sector. The ship's AI, <span class="highlight">{aiName}</span>, alerted them to an anomaly on the unexplored planet <span class="highlight">{planet}</span>.
+
+"Captain, sensors detect <span class="highlight">{adjective1}</span> energy signatures consistent with <span class="highlight">{alienSpecies}</span> technology," announced <span class="highlight">{aiName}</span> in its calm synthetic voice. "They may hold the key to stabilizing the <span class="highlight">{crisis}</span>."
+
+Beaming down to the planet's surface, <span class="highlight">{captainName}</span> encountered the <span class="highlight">{alienSpecies}</span>, crystalline entities who communicated through shifting light patterns. Using the ship's <span class="highlight">{technology}</span>, the captain established communication and learned of an ancient power source: <span class="highlight">{energySource}</span>.
+
+The <span class="highlight">{alienSpecies}</span> revealed that only by <span class="highlight">{verb}</span> the boundaries of conventional physics could the crisis be averted. In a daring maneuver, <span class="highlight">{captainName}</span> piloted the <span class="highlight">{spaceship}</span> directly into the heart of the anomaly, channeling the <span class="highlight">{energySource}</span> through the ship's core.
+
+As space-time folded around them, the crew witnessed the impossible becoming possible. The crisis was resolved, and humanity took its first step into a new era of cosmic understanding. Captain <span class="highlight">{captainName}</span> had once again pushed the boundaries of exploration and discovery.
+
+🚀 <em>Another chapter in humanity's journey to the stars concludes, but the adventure continues...</em>`
+            },
+            mystery: {
+                title: "Detective Mystery",
+                fields: [
+                    { name: "detectiveName", label: "Detective's Name", type: "text", placeholder: "e.g., Sherlock", icon: "fas fa-user-secret" },
+                    { name: "location", label: "Crime Location", type: "text", placeholder: "e.g., abandoned mansion", icon: "fas fa-map-marker-alt" },
+                    { name: "adjective1", label: "Suspicious Adjective", type: "text", placeholder: "e.g., shadowy", icon: "fas fa-eye" },
+                    { name: "victim", label: "Victim's Name", type: "text", placeholder: "e.g., Mr. Kensington", icon: "fas fa-user-injured" },
+                    { name: "weapon", label: "Murder Weapon", type: "text", placeholder: "e.g., candlestick", icon: "fas fa-gavel" },
+                    { name: "clue", label: "Critical Clue", type: "text", placeholder: "e.g., torn ticket stub", icon: "fas fa-search" },
+                    { name: "suspect", label: "Prime Suspect", type: "text", placeholder: "e.g., the butler", icon: "fas fa-mask" },
+                    { name: "motive", label: "Criminal Motive", type: "text", placeholder: "e.g., inheritance", icon: "fas fa-money-bill-wave" },
+                    { name: "time", label: "Time of Crime", type: "text", placeholder: "e.g., midnight", icon: "fas fa-clock" },
+                    { name: "adjective2", label: "Clever Adjective", type: "text", placeholder: "e.g., brilliant", icon: "fas fa-lightbulb" }
+                ],
+                template: `The rain lashed against the windows of the <span class="highlight">{location}</span> as Detective <span class="highlight">{detectiveName}</span> examined the scene. <span class="highlight">{victim}</span> lay motionless, the <span class="highlight">{weapon}</span> beside them the only obvious clue in this <span class="highlight">{adjective1}</span> affair.
+
+At precisely <span class="highlight">{time}</span>, the detective noticed something others had missed: a <span class="highlight">{clue}</span> partially hidden under the Persian rug. This discovery pointed toward <span class="highlight">{suspect}</span>, whose <span class="highlight">{motive}</span> suddenly became apparent.
+
+"Elementary," murmured <span class="highlight">{detectiveName}</span>, assembling the guests in the drawing room. With <span class="highlight">{adjective2}</span> deduction, the detective revealed how the seemingly impossible crime had been committed. The <span class="highlight">{suspect}</span> had been in two places at once, using an elaborate alibi that crumbled under scrutiny.
+
+As the handcuffs clicked shut, the detective reflected on the complexity of human nature that drives people to such desperate acts. Another mystery solved, but the shadows of the city always hold more secrets waiting to be uncovered.
+
+🔍 <em>The case is closed, but truth remains an endless maze of light and shadow...</em>`
+            },
+            romance: {
+                title: "Romantic Encounter",
+                fields: [
+                    { name: "person1", label: "First Person", type: "text", placeholder: "e.g., Emma", icon: "fas fa-user" },
+                    { name: "person2", label: "Second Person", type: "text", placeholder: "e.g., James", icon: "fas fa-user" },
+                    { name: "place", label: "Meeting Place", type: "text", placeholder: "e.g., Paris cafe", icon: "fas fa-map-marker-alt" },
+                    { name: "adjective1", label: "Romantic Adjective", type: "text", placeholder: "e.g., enchanting", icon: "fas fa-heart" },
+                    { name: "object", label: "Significant Object", type: "text", placeholder: "e.g., antique locket", icon: "fas fa-gift" },
+                    { name: "weather", label: "Weather Condition", type: "text", placeholder: "e.g., softly raining", icon: "fas fa-cloud-sun" },
+                    { name: "conflict", label: "Romantic Conflict", type: "text", placeholder: "e.g., mistaken identity", icon: "fas fa-exclamation-circle" },
+                    { name: "gesture", label: "Romantic Gesture", type: "text", placeholder: "e.g., surprise serenade", icon: "fas fa-music" },
+                    { name: "emotion", label: "Strong Emotion", type: "text", placeholder: "e.g., overwhelming", icon: "fas fa-smile-beam" },
+                    { name: "time", label: "Special Time", type: "text", placeholder: "e.g., twilight", icon: "fas fa-moon" }
+                ],
+                template: `It was <span class="highlight">{time}</span> in <span class="highlight">{place}</span> when <span class="highlight">{person1}</span> first saw <span class="highlight">{person2}</span>. The <span class="highlight">{weather}</span> created a <span class="highlight">{adjective1}</span> atmosphere as they locked eyes across the crowded space. <span class="highlight">{person1}</span> noticed the <span class="highlight">{object}</span> that <span class="highlight">{person2}</span> wore, sparking an immediate connection.
+
+But fate intervened with a <span class="highlight">{conflict}</span> that threatened to keep them apart. For weeks, they circled each other like distant stars, drawn together yet kept separate by circumstance. Then, one <span class="highlight">{time}</span>, <span class="highlight">{person2}</span> performed a <span class="highlight">{gesture}</span> that broke through all barriers.
+
+The moment was pure magic. Under the <span class="highlight">{weather}</span> sky, they finally expressed their <span class="highlight">{emotion}</span> feelings. The <span class="highlight">{object}</span> became their symbol, a reminder that true connection can overcome any obstacle when hearts are open.
+
+❤️ <em>Love writes its own stories, and this was just the first chapter of theirs...</em>`
+            },
+            horror: {
+                title: "Horror Story",
+                fields: [
+                    { name: "protagonist", label: "Protagonist", type: "text", placeholder: "e.g., Sarah", icon: "fas fa-user" },
+                    { name: "location", label: "Creepy Location", type: "text", placeholder: "e.g., old asylum", icon: "fas fa-ghost" },
+                    { name: "object", label: "Cursed Object", type: "text", placeholder: "e.g., porcelain doll", icon: "fas fa-skull" },
+                    { name: "sound", label: "Eerie Sound", type: "text", placeholder: "e.g., whispering", icon: "fas fa-volume-up" },
+                    { name: "time", label: "Time of Terror", type: "text", placeholder: "e.g., witching hour", icon: "fas fa-clock" },
+                    { name: "creature", label: "Supernatural Being", type: "text", placeholder: "e.g., shadow figure", icon: "fas fa-spider" },
+                    { name: "verb", label: "Action Verb", type: "text", placeholder: "e.g., crawling", icon: "fas fa-running" },
+                    { name: "adjective1", label: "Terrifying Adjective", type: "text", placeholder: "e.g., blood-curdling", icon: "fas fa-poo" },
+                    { name: "bodyPart", label: "Body Part", type: "text", placeholder: "e.g., skeletal hand", icon: "fas fa-hand-paper" },
+                    { name: "emotion", label: "Fear Emotion", type: "text", placeholder: "e.g., paralyzing dread", icon: "fas fa-surprise" }
+                ],
+                template: `The <span class="highlight">{location}</span> had stood abandoned for decades, but <span class="highlight">{protagonist}</span> felt drawn to explore its decaying halls. At precisely <span class="highlight">{time}</span>, they discovered the <span class="highlight">{object}</span> in the basement - and unwittingly unleashed something ancient and malevolent.
+
+That first night, <span class="highlight">{protagonist}</span> heard <span class="highlight">{sound}</span> coming from the walls. Then came the scratching, the sense of being watched, and finally, the appearance of the <span class="highlight">{creature}</span> <span class="highlight">{verb}</span> along the ceiling.
+
+One <span class="highlight">{time}</span>, <span class="highlight">{protagonist}</span> woke to a <span class="highlight">{adjective1}</span> scream - their own - as a <span class="highlight">{bodyPart}</span> brushed against their face in the darkness. The <span class="highlight">{object}</span> had begun to move on its own, its eyes glowing with unnatural light.
+
+As the nights passed, the manifestations grew stronger. The <span class="highlight">{creature}</span> began to take shape, whispering terrible truths in a voice filled with <span class="highlight">{emotion}</span>. <span class="highlight">{protagonist}</span> realized too late that some doors, once opened, can never be closed...
+
+👻 <em>Some stories should remain untold, some places unvisited, and some mysteries unsolved...</em>`
+            }
+        };
+
+        // DOM Elements
+        const formTitle = document.getElementById('form-title');
+        const formGrid = document.getElementById('form-grid');
+        const madLibsForm = document.getElementById('mad-libs-form');
+        const generateBtn = document.getElementById('generate-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const storySection = document.getElementById('story-section');
+        const storyContent = document.getElementById('story-content');
+        const storyTitle = document.getElementById('story-title');
+        const downloadBtn = document.getElementById('download-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const speakBtn = document.getElementById('speak-btn');
+        const newStoryBtn = document.getElementById('new-story-btn');
+        const scrollTopBtn = document.getElementById('scroll-top');
+        const templateButtons = document.querySelectorAll('.template-btn');
+        const storyDate = document.getElementById('story-date');
+        const storyTime = document.getElementById('story-time');
+
+        // Current state
+        let currentTemplate = 'fantasy';
+        let formValues = {};
+        let generatedStory = '';
+
+        // Initialize the application
+        function init() {
+            renderForm(currentTemplate);
+            setupEventListeners();
+            updateDateTime();
+            setInterval(updateDateTime, 60000); // Update time every minute
+        }
+
+        // Render form based on selected template
+        function renderForm(templateKey) {
+            const template = storyTemplates[templateKey];
+            formTitle.textContent = template.title;
+            formGrid.innerHTML = '';
+            
+            template.fields.forEach(field => {
+                const inputGroup = document.createElement('div');
+                inputGroup.className = 'input-group';
+                inputGroup.innerHTML = `
+                    <label>
+                        <i class="${field.icon}"></i> ${field.label}
+                    </label>
+                    <input 
+                        type="${field.type}" 
+                        name="${field.name}" 
+                        placeholder="${field.placeholder}"
+                        value="${formValues[field.name] || ''}"
+                        required
+                    >
+                    <div class="error-message">Please fill in this field</div>
+                `;
+                formGrid.appendChild(inputGroup);
+            });
+            
+            // Add event listeners to inputs
+            document.querySelectorAll('#form-grid input').forEach(input => {
+                input.addEventListener('input', function() {
+                    formValues[this.name] = this.value;
+                    this.parentElement.classList.remove('error');
+                });
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Template selection
+            templateButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    templateButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    currentTemplate = this.dataset.template;
+                    renderForm(currentTemplate);
+                });
+            });
+            
+            // Form submission
+            madLibsForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (validateForm()) {
+                    generateStory();
+                }
+            });
+            
+            // Reset form
+            resetBtn.addEventListener('click', function() {
+                formValues = {};
+                renderForm(currentTemplate);
+                showToast('Form has been reset', 'success');
+            });
+            
+            // Download story
+            downloadBtn.addEventListener('click', function() {
+                downloadStory();
+            });
+            
+            // Copy story
+            copyBtn.addEventListener('click', function() {
+                copyStory();
+            });
+            
+            // Speak story
+            speakBtn.addEventListener('click', function() {
+                speakStory();
+            });
+            
+            // New story
+            newStoryBtn.addEventListener('click', function() {
+                formValues = {};
+                renderForm(currentTemplate);
+                storySection.classList.remove('show');
+                showToast('Ready to create a new story!', 'success');
+            });
+            
+            // Scroll to top
+            scrollTopBtn.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // Show scroll top button when scrolling down
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    scrollTopBtn.style.display = 'flex';
+                } else {
+                    scrollTopBtn.style.display = 'none';
+                }
+            });
+        }
+
+        // Validate form
+        function validateForm() {
+            let isValid = true;
+            const inputs = document.querySelectorAll('#form-grid input');
+            
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.parentElement.classList.add('error');
+                    isValid = false;
+                }
+            });
+            
+            if (!isValid) {
+                showToast('Please fill in all fields', 'error');
+            }
+            
+            return isValid;
+        }
+
+        // Generate the story
+        function generateStory() {
+            const template = storyTemplates[currentTemplate];
+            generatedStory = template.template;
+            
+            // Replace placeholders with user input
+            template.fields.forEach(field => {
+                const value = formValues[field.name] || '';
+                const regex = new RegExp(`{${field.name}}`, 'g');
+                generatedStory = generatedStory.replace(regex, value);
+            });
+            
+            // Update story content
+            storyTitle.textContent = template.title;
+            storyContent.innerHTML = generatedStory;
+            storySection.classList.add('show');
+            
+            // Scroll to story
+            storySection.scrollIntoView({ behavior: 'smooth' });
+            
+            showToast('Your story has been generated!', 'success');
+        }
+
+        // Download story as text file
+        function downloadStory() {
+            const plainTextStory = storyContent.innerText;
+            const blob = new Blob([plainTextStory], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${storyTitle.textContent.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('Story downloaded successfully!', 'success');
+        }
+
+        // Copy story to clipboard
+        function copyStory() {
+            const plainTextStory = storyContent.innerText;
+            
+            navigator.clipboard.writeText(plainTextStory)
+                .then(() => {
+                    showToast('Story copied to clipboard!', 'success');
+                })
+                .catch(err => {
+                    showToast('Failed to copy story', 'error');
+                    console.error('Could not copy text: ', err);
+                });
+        }
+
+        // Speak story using Web Speech API
+        function speakStory() {
+            if ('speechSynthesis' in window) {
+                const plainTextStory = storyContent.innerText;
+                const utterance = new SpeechSynthesisUtterance(plainTextStory);
+                
+                // Set voice properties
+                utterance.rate = 1;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+                
+                // Find a suitable voice
+                const voices = speechSynthesis.getVoices();
+                const preferredVoices = voices.filter(voice => 
+                    voice.name.includes('English') && 
+                    (voice.name.includes('Female') || voice.name.includes('Zira'))
+                );
+                
+                if (preferredVoices.length > 0) {
+                    utterance.voice = preferredVoices[0];
+                }
+                
+                speechSynthesis.speak(utterance);
+                showToast('Story narration started', 'success');
+            } else {
+                showToast('Speech synthesis not supported in your browser', 'error');
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            // Remove existing toasts
+            const existingToasts = document.querySelectorAll('.toast');
+            existingToasts.forEach(toast => toast.remove());
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Show toast
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            
+            // Hide after delay
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Update date and time
+        function updateDateTime() {
+            const now = new Date();
+            storyDate.textContent = now.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            storyTime.textContent = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
