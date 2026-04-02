@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mad Libs Pro - Interactive Story Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --accent1: #ff6b6b;
+            --accent2: #4ecdc4;
+            --accent3: #45b7d1;
+            --dark: #2d3748;
+            --light: #f8fafc;
+            --success: #38ef7d;
+            --warning: #ff9a3d;
+            --danger: #ff4757;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1f3a 0%, #0d0f1c 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: var(--light);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3));
+            border-radius: 2px;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: 200px 0; }
+        }
+
+        h1 {
+            font-size: 3.8rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--accent1), var(--accent2), var(--accent3));
+            background-size: 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 3s ease infinite;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 300;
+            letter-spacing: 1px;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1.1fr 1.3fr 0.8fr;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(30, 33, 58, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            transition: left 0.7s ease;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .form-section {
+            position: relative;
+            z-index: 2;
+        }
+
+        .story-section {
+            position: relative;
+            z-index: 2;
+        }
+
+        .history-section {
+            position: relative;
+            z-index: 2;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            background: linear-gradient(45deg, var(--accent1), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.5rem;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 30px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent1), var(--accent2));
+            border-radius: 2px;
+        }
+
+        .template-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .template-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .template-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+        }
+
+        .template-btn.active {
+            background: linear-gradient(45deg, var(--accent1), var(--accent2));
+            border-color: transparent;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent2);
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-group label {
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: linear-gradient(45deg, var(--accent1), var(--accent2));
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            backdrop-filter: blur(10px);
+            background-color: rgba(30, 33, 58, 0.7);
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, var(--accent1), var(--accent2), var(--accent3));
+            background-size: 300%;
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: gradientShift 3s ease infinite;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.4);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        .story-output {
+            background: rgba(20, 22, 38, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            min-height: 300px;
+            color: var(--light);
+            font-size: 18px;
+            line-height: 1.8;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .story-output::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3));
+            border-radius: 15px 15px 0 0;
+        }
+
+        .story-placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 18px;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .story-placeholder i {
+            font-size: 3rem;
+            opacity: 0.5;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .save-btn {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+            color: white;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .copy-btn {
+            background: linear-gradient(45deg, #4a00e0, #8e2de2);
+            color: white;
+        }
+
+        .speak-btn {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .print-btn {
+            background: linear-gradient(45deg, #ff9a3d, #ff6b6b);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .word-count {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 20px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid var(--accent2);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification.error {
+            background: linear-gradient(45deg, #ff4757, #ff6b6b);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .highlight {
+            background: linear-gradient(45deg, var(--accent1), var(--accent2));
+            background-size: 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            animation: gradient 2s ease infinite;
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .history-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .history-snippet {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .history-date {
+            font-size: 0.8rem;
+            color: var(--accent2);
+            font-weight: 500;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .history-btn {
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .history-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .history-placeholder {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            padding: 30px 0;
+            font-style: italic;
+        }
+
+        .ai-feature {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .ai-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .ai-title i {
+            color: var(--accent2);
+        }
+
+        .ai-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .ai-option {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .ai-option:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .ai-option.active {
+            background: linear-gradient(45deg, var(--accent1), var(--accent2));
+        }
+
+        .ai-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 15px;
+            font-family: inherit;
+        }
+
+        .ai-input:focus {
+            outline: none;
+            border-color: var(--accent2);
+        }
+
+        .ai-submit {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, var(--accent1), var(--accent2));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ai-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--accent1), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .history-section {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .history-section {
+                grid-column: span 1;
+            }
+            
+            h1 {
+                font-size: 2.8rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .template-btn {
+                padding: 8px 15px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>MAD LIBS PRO</h1>
+            <p class="subtitle">AI-Powered Story Generator - Create hilarious, engaging stories with advanced templates and AI enhancements</p>
+        </div>
+
+        <div class="main-content">
+            <div class="card form-section">
+                <h2 class="section-title"><i class="fas fa-wand-magic-sparkles"></i> Story Builder</h2>
+                
+                <div class="template-selector">
+                    <button class="template-btn active" data-template="fantasy"><i class="fas fa-dragon"></i> Fantasy</button>
+                    <button class="template-btn" data-template="scifi"><i class="fas fa-rocket"></i> Sci-Fi</button>
+                    <button class="template-btn" data-template="mystery"><i class="fas fa-search"></i> Mystery</button>
+                    <button class="template-btn" data-template="adventure"><i class="fas fa-map"></i> Adventure</button>
+                    <button class="template-btn" data-template="romance"><i class="fas fa-heart"></i> Romance</button>
+                    <button class="template-btn" data-template="superhero"><i class="fas fa-mask"></i> Superhero</button>
+                </div>
+
+                <form id="storyForm">
+                    <div class="form-grid" id="formGrid">
+                        <!-- Form fields will be dynamically generated -->
+                    </div>
+                    <button type="submit" class="generate-btn">
+                        <i class="fas fa-sparkles"></i> Generate Epic Story
+                    </button>
+                </form>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="color: white;">AI is crafting your masterpiece...</p>
+                </div>
+
+                <div class="ai-feature">
+                    <div class="ai-title">
+                        <i class="fas fa-robot"></i> AI Enhancements
+                    </div>
+                    <div class="ai-options">
+                        <div class="ai-option active" data-ai="none">None</div>
+                        <div class="ai-option" data-ai="funny">Add Humor</div>
+                        <div class="ai-option" data-ai="dramatic">Make Dramatic</div>
+                        <div class="ai-option" data-ai="twist">Add Plot Twist</div>
+                    </div>
+                    <input type="text" class="ai-input" id="customPrompt" placeholder="Custom AI instruction (e.g., 'add dinosaurs', 'set in space')">
+                    <button class="ai-submit" id="aiEnhance">Apply AI Enhancement</button>
+                </div>
+            </div>
+
+            <div class="card story-section">
+                <h2 class="section-title"><i class="fas fa-book-open"></i> Your Story</h2>
+                <div class="word-count" id="wordCount">0 words</div>
+                
+                <div class="story-output" id="storyOutput">
+                    <div class="story-placeholder">
+                        <i class="fas fa-book"></i>
+                        <div>Select a template and fill in the blanks to create your amazing story!</div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn save-btn" id="saveBtn">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <button class="action-btn download-btn" id="downloadBtn">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                    <button class="action-btn copy-btn" id="copyBtn">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button class="action-btn speak-btn" id="speakBtn">
+                        <i class="fas fa-volume-up"></i> Read
+                    </button>
+                    <button class="action-btn print-btn" id="printBtn">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                </div>
+
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-value" id="storiesCount">0</div>
+                        <div class="stat-label">Stories Created</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="wordsCount">0</div>
+                        <div class="stat-label">Total Words</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="savedCount">0</div>
+                        <div class="stat-label">Saved Stories</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card history-section">
+                <h2 class="section-title"><i class="fas fa-history"></i> Story History</h2>
+                <div class="history-list" id="historyList">
+                    <div class="history-placeholder">No saved stories yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Enhanced story templates with more variety
+        const templates = {
+            fantasy: {
+                fields: [
+                    { name: 'heroName', type: 'text', label: 'Hero Name', placeholder: 'Enter a brave hero name' },
+                    { name: 'magicalCreature', type: 'text', label: 'Magical Creature', placeholder: 'Dragon, unicorn, phoenix...' },
+                    { name: 'enchantedObject', type: 'text', label: 'Enchanted Object', placeholder: 'Magic sword, crystal ball...' },
+                    { name: 'adjective1', type: 'text', label: 'Adjective', placeholder: 'Mysterious, glowing, ancient...' },
+                    { name: 'verb1', type: 'text', label: 'Action Verb', placeholder: 'Soar, battle, discover...' },
+                    { name: 'location', type: 'text', label: 'Fantasy Location', placeholder: 'Castle, forest, mountain...' },
+                    { name: 'emotion', type: 'text', label: 'Emotion', placeholder: 'Courage, fear, wonder...' },
+                    { name: 'number', type: 'number', label: 'Number', placeholder: '7' }
+                ],
+                template: `In the <span class="highlight">{adjective1}</span> realm of <span class="highlight">{location}</span>, a legendary hero named <span class="highlight">{heroName}</span> embarked on an epic quest. Armed with the powerful <span class="highlight">{enchantedObject}</span>, they had to {verb1} across treacherous lands to find the ancient <span class="highlight">{magicalCreature}</span>. 
+
+After {number} days of perilous journey, {heroName} finally reached the mystical sanctuary where the {magicalCreature} dwelled. With {emotion} filling their heart, our hero realized that the greatest magic was not in the {enchantedObject}, but in the courage to face the unknown.
+
+The {magicalCreature} spoke in riddles of ancient wisdom: "Those who seek with pure intentions shall find more than they ever imagined." And so, {heroName} returned home not just with treasure, but with a heart full of {emotion} and stories that would inspire generations to come.`
+            },
+            scifi: {
+                fields: [
+                    { name: 'astronautName', type: 'text', label: 'Astronaut Name', placeholder: 'Commander Nova' },
+                    { name: 'alienRace', type: 'text', label: 'Alien Race', placeholder: 'Zephyrians, Crystallites...' },
+                    { name: 'spaceship', type: 'text', label: 'Spaceship Name', placeholder: 'Stellar Phoenix' },
+                    { name: 'planet', type: 'text', label: 'Planet Name', placeholder: 'Kepler-442b' },
+                    { name: 'technology', type: 'text', label: 'Future Technology', placeholder: 'Quantum drive, holo-deck...' },
+                    { name: 'adjective2', type: 'text', label: 'Sci-Fi Adjective', placeholder: 'Bioluminescent, cybernetic...' },
+                    { name: 'verb2', type: 'text', label: 'Action Verb', placeholder: 'Teleport, scan, decode...' },
+                    { name: 'yearFuture', type: 'number', label: 'Year in Future', placeholder: '2087' }
+                ],
+                template: `In the year <span class="highlight">{yearFuture}</span>, Captain <span class="highlight">{astronautName}</span> commanded the advanced starship <span class="highlight">{spaceship}</span> on a mission to the distant planet <span class="highlight">{planet}</span>. Using cutting-edge <span class="highlight">{technology}</span>, the crew discovered a civilization of <span class="highlight">{adjective2}</span> beings known as the <span class="highlight">{alienRace}</span>.
+
+These remarkable creatures could {verb2} through dimensions using only their thoughts! The {alienRace} welcomed Captain {astronautName} with a spectacular display of their {adjective2} cities that floated in the planet's purple atmosphere.
+
+Through the universal translator powered by {technology}, the {alienRace} shared their advanced knowledge of interstellar travel. Captain {astronautName} realized that this encounter would forever change humanity's understanding of the cosmos. The {spaceship} returned to Earth carrying not just scientific data, but the promise of a new era of galactic cooperation.`
+            },
+            mystery: {
+                fields: [
+                    { name: 'detectiveName', type: 'text', label: 'Detective Name', placeholder: 'Detective Holmes' },
+                    { name: 'suspiciousCharacter', type: 'text', label: 'Suspicious Character', placeholder: 'The butler, librarian...' },
+                    { name: 'mysteriousObject', type: 'text', label: 'Mysterious Object', placeholder: 'Antique locket, secret diary...' },
+                    { name: 'location2', type: 'text', label: 'Mysterious Location', placeholder: 'Manor, library, garden...' },
+                    { name: 'clue', type: 'text', label: 'Important Clue', placeholder: 'Fingerprint, letter, key...' },
+                    { name: 'adjective3', type: 'text', label: 'Descriptive Adjective', placeholder: 'Eerie, puzzling, hidden...' },
+                    { name: 'verb3', type: 'text', label: 'Investigation Verb', placeholder: 'Investigate, examine, deduce...' },
+                    { name: 'timeOfDay', type: 'text', label: 'Time of Day', placeholder: 'Midnight, dawn, dusk...' }
+                ],
+                template: `At the stroke of <span class="highlight">{timeOfDay}</span>, the brilliant detective <span class="highlight">{detectiveName}</span> was called to investigate a <span class="highlight">{adjective3}</span> case at the old <span class="highlight">{location2}</span>. The only witness was the peculiar <span class="highlight">{suspiciousCharacter}</span>, who kept nervously glancing at a <span class="highlight">{mysteriousObject}</span> on the mantelpiece.
+
+Detective {detectiveName} decided to {verb3} every inch of the {location2}, searching for clues that others might have missed. Hidden beneath a loose floorboard, they discovered a crucial <span class="highlight">{clue}</span> that would crack the case wide open!
+
+The {suspiciousCharacter} gasped when confronted with the evidence. "The {mysteriousObject} holds the key to everything!" they confessed. As the {adjective3} truth unraveled, Detective {detectiveName} realized that sometimes the most obvious suspect is hiding the most unexpected secrets. The case was solved, but the mystery of the {mysteriousObject} would haunt the detective's dreams for years to come.`
+            },
+            adventure: {
+                fields: [
+                    { name: 'adventurerName', type: 'text', label: 'Adventurer Name', placeholder: 'Captain Swift' },
+                    { name: 'companion', type: 'text', label: 'Loyal Companion', placeholder: 'Wise owl, brave dog...' },
+                    { name: 'treasure', type: 'text', label: 'Hidden Treasure', placeholder: 'Golden compass, ruby map...' },
+                    { name: 'obstacle', type: 'text', label: 'Dangerous Obstacle', placeholder: 'Raging river, steep cliff...' },
+                    { name: 'vehicle', type: 'text', label: 'Mode of Transport', placeholder: 'Hot air balloon, sailboat...' },
+                    { name: 'adjective4', type: 'text', label: 'Adventurous Adjective', placeholder: 'Treacherous, exciting, wild...' },
+                    { name: 'verb4', type: 'text', label: 'Adventure Verb', placeholder: 'Climb, swing, dive...' },
+                    { name: 'distance', type: 'number', label: 'Distance (miles)', placeholder: '1000' }
+                ],
+                template: `The fearless explorer <span class="highlight">{adventurerName}</span> and their faithful <span class="highlight">{companion}</span> embarked on a <span class="highlight">{adjective4}</span> journey spanning <span class="highlight">{distance}</span> miles in search of the legendary <span class="highlight">{treasure}</span>. Their trusty <span class="highlight">{vehicle}</span> carried them across uncharted territories filled with wonder and danger.
+
+When they encountered the formidable <span class="highlight">{obstacle}</span>, {adventurerName} had to {verb4} with incredible skill and determination. The {companion} proved invaluable, using its keen instincts to guide them safely through the {adjective4} terrain.
+
+Finally, after weeks of adventure, they discovered the magnificent <span class="highlight">{treasure}</span> hidden in an ancient temple. But the real treasure was the unbreakable bond forged between {adventurerName} and their loyal {companion} during their {adjective4} quest. They returned home as legends, inspiring others to seek their own adventures across the {distance} miles of unexplored world.`
+            },
+            romance: {
+                fields: [
+                    { name: 'person1', type: 'text', label: 'Person 1', placeholder: 'Emma' },
+                    { name: 'person2', type: 'text', label: 'Person 2', placeholder: 'James' },
+                    { name: 'meetingPlace', type: 'text', label: 'Meeting Place', placeholder: 'Café, library, park...' },
+                    { name: 'adjective5', type: 'text', label: 'Romantic Adjective', placeholder: 'Enchanting, captivating...' },
+                    { name: 'sharedActivity', type: 'text', label: 'Shared Activity', placeholder: 'Dancing, stargazing...' },
+                    { name: 'gift', type: 'text', label: 'Special Gift', placeholder: 'Bouquet, locket...' },
+                    { name: 'timePeriod', type: 'text', label: 'Time Period', placeholder: 'Spring, autumn...' },
+                    { name: 'emotion2', type: 'text', label: 'Emotion', placeholder: 'Love, longing...' }
+                ],
+                template: `It was a <span class="highlight">{timePeriod}</span> evening when <span class="highlight">{person1}</span> first met <span class="highlight">{person2}</span> at the <span class="highlight">{meetingPlace}</span>. There was something <span class="highlight">{adjective5}</span> about the way {person2} smiled that made {person1}'s heart skip a beat.
+
+They began {sharedActivity} together every weekend, sharing stories and laughter. One day, {person2} surprised {person1} with a <span class="highlight">{gift}</span>, and in that moment, {person1} knew they had found something special.
+
+As the seasons changed, their <span class="highlight">{emotion2}</span> grew deeper. What started as a chance encounter blossomed into a beautiful love story that would last a lifetime, proving that sometimes the best things in life happen when you least expect them.`
+            },
+            superhero: {
+                fields: [
+                    { name: 'heroName', type: 'text', label: 'Hero Name', placeholder: 'Captain Justice' },
+                    { name: 'superpower', type: 'text', label: 'Superpower', placeholder: 'Flight, telekinesis...' },
+                    { name: 'city', type: 'text', label: 'City', placeholder: 'Metropolis, Gotham...' },
+                    { name: 'villain', type: 'text', label: 'Villain', placeholder: 'Dr. Chaos, Shadow King...' },
+                    { name: 'weakness', type: 'text', label: 'Weakness', placeholder: 'Kryptonite, water...' },
+                    { name: 'adjective6', type: 'text', label: 'Adjective', placeholder: 'Incredible, amazing...' },
+                    { name: 'verb5', type: 'text', label: 'Action Verb', placeholder: 'Soar, rescue, protect...' },
+                    { name: 'catchphrase', type: 'text', label: 'Catchphrase', placeholder: 'For justice! Up and away!' }
+                ],
+                template: `In the sprawling city of <span class="highlight">{city}</span>, a new hero emerged: <span class="highlight">{heroName}</span>! With the <span class="highlight">{adjective6}</span> power to {superpower}, they dedicated their life to protecting the innocent from evil.
+
+One fateful night, the villainous <span class="highlight">{villain}</span> threatened to destroy {city}. Using their {superpower}, {heroName} {verb5} into action! But {villain} knew {heroName}'s weakness - <span class="highlight">{weakness}</span> - and nearly succeeded in defeating our hero.
+
+Summoning all their courage, {heroName} overcame the {weakness} and shouted their iconic catchphrase: "<span class="highlight">{catchphrase}</span>"! With one final heroic effort, {villain} was defeated, and peace returned to {city}. The citizens cheered for their {adjective6} protector, {heroName}!`
+            }
+        };
+
+        let currentTemplate = 'fantasy';
+        let currentStory = '';
+        let speechSynthesis = window.speechSynthesis;
+        let storiesCreated = 0;
+        let totalWords = 0;
+        let savedStories = [];
+        let currentAiEnhancement = 'none';
+
+        // Initialize the app
+        function init() {
+            createFloatingElements();
+            generateFormFields();
+            setupEventListeners();
+            loadHistory();
+            updateStats();
+        }
+
+        // Create floating background elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 15; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (15 + Math.random() * 15) + 's';
+                element.style.width = (20 + Math.random() * 40) + 'px';
+                element.style.height = (20 + Math.random() * 40) + 'px';
+                element.style.opacity = 0.1 + Math.random() * 0.2;
+                container.appendChild(element);
+            }
+        }
+
+        // Generate form fields based on template
+        function generateFormFields() {
+            const formGrid = document.getElementById('formGrid');
+            const template = templates[currentTemplate];
+            
+            formGrid.innerHTML = '';
+            
+            template.fields.forEach(field => {
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+                
+                formGroup.innerHTML = `
+                    <label for="${field.name}">${field.label}</label>
+                    <input type="${field.type}" id="${field.name}" name="${field.name}" 
+                           placeholder="${field.placeholder}" required>
+                `;
+                
+                formGrid.appendChild(formGroup);
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Template selector buttons
+            document.querySelectorAll('.template-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentTemplate = e.target.dataset.template;
+                    generateFormFields();
+                });
+            });
+
+            // Story form submission
+            document.getElementById('storyForm').addEventListener('submit', generateStory);
+
+            // Action buttons
+            document.getElementById('saveBtn').addEventListener('click', saveStory);
+            document.getElementById('downloadBtn').addEventListener('click', downloadStory);
+            document.getElementById('copyBtn').addEventListener('click', copyStory);
+            document.getElementById('speakBtn').addEventListener('click', speakStory);
+            document.getElementById('printBtn').addEventListener('click', printStory);
+            
+            // AI options
+            document.querySelectorAll('.ai-option').forEach(option => {
+                option.addEventListener('click', (e) => {
+                    document.querySelectorAll('.ai-option').forEach(o => o.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentAiEnhancement = e.target.dataset.ai;
+                });
+            });
+            
+            // AI enhancement button
+            document.getElementById('aiEnhance').addEventListener('click', applyAiEnhancement);
+        }
+
+        // Generate story
+        function generateStory(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                showNotification('Please fill in all fields!', 'error');
+                return;
+            }
+            
+            const loadingEl = document.getElementById('loading');
+            const storyOutput = document.getElementById('storyOutput');
+            
+            loadingEl.classList.add('active');
+            storyOutput.innerHTML = '';
+            
+            // Simulate processing time for dramatic effect
+            setTimeout(() => {
+                const formData = new FormData(e.target);
+                const data = {};
+                
+                for (let [key, value] of formData.entries()) {
+                    data[key] = value;
+                }
+                
+                let story = templates[currentTemplate].template;
+                
+                // Replace placeholders with user input
+                Object.keys(data).forEach(key => {
+                    const regex = new RegExp(`{${key}}`, 'g');
+                    story = story.replace(regex, data[key]);
+                });
+                
+                currentStory = story;
+                
+                // Apply AI enhancement if selected
+                if (currentAiEnhancement !== 'none') {
+                    story = applyAiEffect(story, currentAiEnhancement);
+                    currentStory = story;
+                }
+                
+                // Type out the story with animation
+                typeStory(story);
+                updateWordCount(story);
+                
+                loadingEl.classList.remove('active');
+                
+                // Update stats
+                storiesCreated++;
+                totalWords += countWords(story);
+                updateStats();
+                
+                showNotification('Your story has been generated!', 'success');
+            }, 1500);
+        }
+
+        // Apply AI enhancement to story
+        function applyAiEnhancement() {
+            if (!currentStory) {
+                showNotification('Please generate a story first!', 'error');
+                return;
+            }
+            
+            const customPrompt = document.getElementById('customPrompt').value;
+            let promptType = currentAiEnhancement;
+            
+            if (customPrompt) {
+                promptType = customPrompt;
+            }
+            
+            const loadingEl = document.getElementById('loading');
+            const storyOutput = document.getElementById('storyOutput');
+            
+            loadingEl.classList.add('active');
+            storyOutput.innerHTML = '';
+            
+            setTimeout(() => {
+                currentStory = applyAiEffect(currentStory, promptType);
+                storyOutput.innerHTML = currentStory;
+                updateWordCount(currentStory);
+                loadingEl.classList.remove('active');
+                showNotification('AI enhancement applied!', 'success');
+            }, 1800);
+        }
+
+        // Simulate AI effect
+        function applyAiEffect(story, effect) {
+            // In a real app, this would call an AI API
+            // Here we simulate the effect with text transformations
+            
+            let enhancedStory = story;
+            
+            switch(effect) {
+                case 'funny':
+                    enhancedStory = story.replace(/\./g, '! 😂 ')
+                        .replace(/realized/g, 'suddenly realized with a comical gasp')
+                        .replace(/began/g, 'awkwardly began')
+                        .replace(/finally/g, 'finally, after much hilarious stumbling')
+                        + " And they all laughed until their sides hurt! 🤣";
+                    break;
+                    
+                case 'dramatic':
+                    enhancedStory = story.replace(/\./g, '... with intense emotion. ')
+                        .replace(/realized/g, 'came to the profound realization')
+                        .replace(/began/g, 'solemnly began')
+                        .replace(/finally/g, 'at long last, after countless trials')
+                        + " The weight of the moment hung heavy in the air...";
+                    break;
+                    
+                case 'twist':
+                    enhancedStory = story + " But in a shocking twist, it was revealed that everything was not as it seemed! " +
+                        "The truth would change everything they thought they knew...";
+                    break;
+                    
+                default:
+                    // For custom prompts, add a simple enhancement
+                    if (effect) {
+                        enhancedStory = story + ` ${effect}. This unexpected development added a new dimension to the story!`;
+                    }
+            }
+            
+            return enhancedStory;
+        }
+
+        // Type story with animation
+        function typeStory(story) {
+            const storyOutput = document.getElementById('storyOutput');
+            storyOutput.innerHTML = '';
+            
+            let index = 0;
+            const typingSpeed = 20; // ms per character
+            
+            function typeChar() {
+                if (index < story.length) {
+                    storyOutput.innerHTML = story.substring(0, index + 1);
+                    index++;
+                    setTimeout(typeChar, typingSpeed);
+                } else {
+                    storyOutput.innerHTML = story;
+                }
+            }
+            
+            typeChar();
+        }
+
+        // Update word count
+        function updateWordCount(story) {
+            const words = countWords(story);
+            document.getElementById('wordCount').textContent = `${words} words`;
+        }
+
+        // Count words in a string
+        function countWords(text) {
+            return text.split(/\s+/).filter(word => word.length > 0).length;
+        }
+
+        // Save story to history
+        function saveStory() {
+            if (!currentStory) {
+                showNotification('Please generate a story first!', 'error');
+                return;
+            }
+            
+            // Create a plain text version for storage
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = currentStory;
+            const plainText = tempDiv.textContent || tempDiv.innerText;
+            
+            const storyData = {
+                id: Date.now(),
+                title: `${currentTemplate.charAt(0).toUpperCase() + currentTemplate.slice(1)} Story`,
+                content: plainText,
+                template: currentTemplate,
+                timestamp: new Date().toLocaleString(),
+                wordCount: countWords(currentStory)
+            };
+            
+            savedStories.push(storyData);
+            saveHistory();
+            renderHistory();
+            updateStats();
+            
+            showNotification('Story saved to history!', 'success');
+        }
+
+        // Save history to localStorage
+        function saveHistory() {
+            localStorage.setItem('madLibsHistory', JSON.stringify(savedStories));
+        }
+
+        // Load history from localStorage
+        function loadHistory() {
+            const history = localStorage.getItem('madLibsHistory');
+            if (history) {
+                savedStories = JSON.parse(history);
+                renderHistory();
+            }
+        }
+
+        // Render history list
+        function renderHistory() {
+            const historyList = document.getElementById('historyList');
+            
+            if (savedStories.length === 0) {
+                historyList.innerHTML = '<div class="history-placeholder">No saved stories yet</div>';
+                return;
+            }
+            
+            historyList.innerHTML = '';
+            
+            savedStories.slice().reverse().forEach(story => {
+                const storyEl = document.createElement('div');
+                storyEl.className = 'history-item';
+                storyEl.dataset.id = story.id;
+                
+                // Create snippet (first 100 characters)
+                let snippet = story.content.substring(0, 100);
+                if (story.content.length > 100) snippet += '...';
+                
+                storyEl.innerHTML = `
+                    <div class="history-title">
+                        <div>${story.title}</div>
+                        <div class="history-date">${story.timestamp}</div>
+                    </div>
+                    <div class="history-snippet">${snippet}</div>
+                    <div class="history-actions">
+                        <button class="history-btn view-btn"><i class="fas fa-eye"></i> View</button>
+                        <button class="history-btn delete-btn"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                `;
+                
+                historyList.appendChild(storyEl);
+                
+                // Add event listeners
+                storyEl.querySelector('.view-btn').addEventListener('click', () => viewStory(story.id));
+                storyEl.querySelector('.delete-btn').addEventListener('click', () => deleteStory(story.id));
+            });
+        }
+
+        // View a saved story
+        function viewStory(id) {
+            const story = savedStories.find(s => s.id === id);
+            if (!story) return;
+            
+            currentStory = story.content;
+            const storyOutput = document.getElementById('storyOutput');
+            storyOutput.innerHTML = story.content;
+            updateWordCount(story.content);
+            
+            showNotification('Story loaded from history!', 'success');
+        }
+
+        // Delete a saved story
+        function deleteStory(id) {
+            savedStories = savedStories.filter(s => s.id !== id);
+            saveHistory();
+            renderHistory();
+            updateStats();
+            
+            showNotification('Story deleted from history!', 'success');
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('storiesCount').textContent = storiesCreated;
+            document.getElementById('wordsCount').textContent = totalWords;
+            document.getElementById('savedCount').textContent = savedStories.length;
+        }
+
+        // Download story as text file
+        function downloadStory() {
+            if (!currentStory) {
+                showNotification('Please generate a story first!', 'error');
+                return;
+            }
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = currentStory;
+            const plainText = tempDiv.textContent || tempDiv.innerText;
+            
+            const blob = new Blob([plainText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mad-libs-story-${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Story downloaded successfully!', 'success');
+        }
+
+        // Copy story to clipboard
+        function copyStory() {
+            if (!currentStory) {
+                showNotification('Please generate a story first!', 'error');
+                return;
+            }
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = currentStory;
+            const plainText = tempDiv.textContent || tempDiv.innerText;
+            
+            navigator.clipboard.writeText(plainText).then(() => {
+                showNotification('Story copied to clipboard!', 'success');
+            });
+        }
+
+        // Speak story using text-to-speech
+        function speakStory() {
+            if (!currentStory) {
+                showNotification('Please generate a story first!', 'error');
+                return;
+            }
+            
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+                showNotification('Speech stopped', 'success');
+                return;
+            }
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = currentStory;
+            const plainText = tempDiv.textContent || tempDiv.innerText;
+            
+            const utterance = new SpeechSynthesisUtterance(plainText);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            speechSynthesis.speak(utterance);
+            showNotification('Reading story aloud...', 'success');
+        }
+
+        // Print story
+        function printStory() {
+            if (!currentStory) {
+                showNotification('Please generate a story first!', 'error');
+                return;
+            }
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Mad Libs Story</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+                        h1 { color: #333; text-align: center; }
+                        .content { max-width: 800px; margin: 0 auto; }
+                        .highlight { background-color: #ffff00; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="content">
+                        ${currentStory}
+                    </div>
+                    <script>
+                        window.onload = function() { window.print(); window.close(); }
+                    </script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification';
+            
+            if (type === 'error') {
+                notification.classList.add('error');
+                notification.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            } else {
+                notification.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Validate form
+        function validateForm() {
+            const inputs = document.querySelectorAll('#formGrid input');
+            let valid = true;
+            
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    valid = false;
+                    input.style.borderColor = 'var(--danger)';
+                } else {
+                    input.style.borderColor = '';
+                }
+            });
+            
+            return valid;
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
